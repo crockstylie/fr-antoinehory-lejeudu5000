@@ -23,6 +23,24 @@
 
     <!-- GameScreen -->
     <string name="game_screen_title">Le Jeu du 5000</string>
-    <string name="game_screen_placeholder_content">Contenu de l\'écran de Jeu - Que les dés roulent !
-    </string>
+    <string name="game_screen_placeholder_content">Contenu de l\'écran de Jeu - Que les dés roulent !</string>
+
+    <!-- Strings for the new InfoScreen content -->
+    <string name="info_section_personal_title">Mes Informations Personnelles</string>
+    <string name="info_section_social_title">Retrouvez-moi sur</string>
+    <string name="info_section_app_info_title">Informations sur l\'Application</string>
+    <string name="info_app_version_label">Version de l\'application : %1$s</string>
+
+    <string name="info_developer_label">Développeur</string>
+    <string name="info_website_label">Site Web</string>
+    <string name="info_email_label">Email</string>
+    <string name="info_donate_label">Soutenez-moi</string>
+
+    <!-- Content Descriptions for Social Media Icons -->
+    <string name="info_cd_linkedin">Profil LinkedIn</string>
+    <string name="info_cd_behance">Profil Behance</string>
+    <string name="info_cd_instagram">Profil Instagram</string>
+    <string name="info_cd_facebook">Profil Facebook</string>
+    <string name="info_cd_spotify">Profil Spotify</string>
+    <string name="info_cd_steam">Profil Steam</string>
 </resources>
