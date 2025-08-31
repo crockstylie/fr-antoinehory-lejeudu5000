@@ -2,8 +2,8 @@ package fr.antoinehory.lejeudu5000.ui.feature_info
 
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import fr.antoinehory.lejeudu5000.BuildConfig // Import BuildConfig
 import fr.antoinehory.lejeudu5000.R
+import fr.antoinehory.lejeudu5000.domain.utils.AppVersionProvider // New import
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,12 +15,14 @@ import javax.inject.Inject
  * This ViewModel is responsible for preparing and managing the data to be displayed on the InfoScreen.
  * It provides a [StateFlow] of [InfoScreenUiState] that the UI can observe for updates.
  * Hilt is used for dependency injection.
- * The application version is dynamically retrieved from [BuildConfig].
+ * The application version is retrieved via an injected [AppVersionProvider] for better testability.
  *
  * This class is marked as 'open' to allow for extension in Previews for mocking purposes.
  */
 @HiltViewModel
-open class InfoViewModel @Inject constructor() : ViewModel() { // Added 'open'
+open class InfoViewModel @Inject constructor(
+    private val appVersionProvider: AppVersionProvider // Inject AppVersionProvider
+) : ViewModel() {
 
     // Private MutableStateFlow to hold the UI state.
     private val _uiState = MutableStateFlow(
@@ -81,8 +83,8 @@ open class InfoViewModel @Inject constructor() : ViewModel() { // Added 'open'
                     url = "https://steamcommunity.com/id/crockstylie/"
                 )
             ),
-            // Dynamically get app version from BuildConfig
-            appVersion = BuildConfig.VERSION_NAME
+            // Get app version from the injected provider
+            appVersion = appVersionProvider.getVersionName()
         )
     )
 
@@ -90,6 +92,6 @@ open class InfoViewModel @Inject constructor() : ViewModel() { // Added 'open'
      * Publicly exposed [StateFlow] of [InfoScreenUiState] for the UI to observe.
      * This property is marked as 'open' to allow for overriding in Previews for mocking purposes.
      */
-    open val uiState: StateFlow<InfoScreenUiState> = _uiState.asStateFlow() // Added 'open'
+    open val uiState: StateFlow<InfoScreenUiState> = _uiState.asStateFlow()
 }
 

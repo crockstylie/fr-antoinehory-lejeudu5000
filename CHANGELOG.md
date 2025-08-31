@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`InfoViewModel` and `InfoUiState` for managing InfoScreen data and state.**
 - **Dynamic display of application version on InfoScreen, fetched from `BuildConfig`.**
 - **New string resources in `strings.xml` for `InfoScreen` content.**
+- **UI tests for `InfoScreen` (`InfoScreenTest.kt`) covering content display, click actions, and empty states.**
+- **Necessary testing dependencies (JUnit Jupiter API, MockK Android) for instrumented tests.**
 
 ### Changed
 - Updated Kotlin and KSP plugin application in project-level `build.gradle.kts`.
@@ -31,5 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Corrected various IDE-reported issues in `InfoScreen.kt`, including Hilt ViewModel unresolved references (after dependency fix), string resource lookup logic, composable preview setup by making `InfoViewModel` and its `uiState` open, and parameter order for `Modifier`.**
 - **Ensured app version now correctly displays on InfoScreen after `strings.xml` and `BuildConfig` fixes.**
 - **Ensured `FontFamily.Monospace` is correctly and consistently applied, resolving previous theme inconsistencies on InfoScreen.**
+- **Resolved build error `INSTALL_FAILED_USER_RESTRICTED` during UI test execution on physical device (MIUI) by disabling MIUI optimizations and enabling developer options for USB install.**
+- **Resolved build error due to duplicate `META-INF/LICENSE.md` files from JUnit Jupiter dependencies by adding packaging options to `app/build.gradle.kts`.**
+- **Corrected `InfoScreenTest` to accurately assert displayed text for personal info items, aligning with `InfoScreen`'s label formatting.**
 
 ### Removed
