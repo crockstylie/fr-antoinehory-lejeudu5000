@@ -13,7 +13,7 @@ import javax.inject.Singleton
  */
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class AppModule {
+abstract class AppBindingModule {
 
     /**
      * Binds [BuildConfigAppVersionProvider] to its [AppVersionProvider] interface.

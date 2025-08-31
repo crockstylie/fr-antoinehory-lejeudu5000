@@ -54,7 +54,7 @@ android {
     }
     testOptions {
         unitTests.all {
-            it.useJUnitPlatform()
+            it.useJUnitPlatform() // Correct pour JUnit 5 dans les tests unitaires
         }
     }
 }
@@ -68,7 +68,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
+    implementation(platform(libs.androidx.compose.bom)) // BOM pour gérer les versions Compose
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
@@ -81,27 +81,29 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
-    
+
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
 
-    testImplementation(libs.junit)
+    // Dépendances de Test Unitaire
+    testImplementation(libs.junit) // JUnit 4 (peut être nécessaire pour certains runners ou anciennes libs)
+    testImplementation(libs.junit.jupiter.api) // JUnit 5 API (pour vos tests unitaires ViewModel)
+    testRuntimeOnly(libs.junit.jupiter.engine) // JUnit 5 Engine (pour exécuter les tests JUnit 5)
+    testImplementation(libs.junit.jupiter.params) // JUnit 5 Params (pour les tests paramétrés)
+    testImplementation(libs.mockk.core) // MockK pour les tests unitaires
+    testImplementation(libs.kotlinx.coroutines.test) // Pour tester les coroutines
+    testImplementation(libs.turbine) // Pour tester les Flows
 
-    testImplementation(libs.junit.jupiter.api)
-    testRuntimeOnly(libs.junit.jupiter.engine)
-    testImplementation(libs.junit.jupiter.params)
+    // Dépendances de Test Instrumenté (AndroidTest)
+    androidTestImplementation(platform(libs.androidx.compose.bom)) // BOM pour les tests instrumentés Compose
+    androidTestImplementation(libs.androidx.junit) // AndroidX Test JUnit runner et règles (basé sur JUnit 4)
+    androidTestImplementation(libs.androidx.espresso.core) // Espresso (si vous l'utilisez, sinon optionnel)
+    androidTestImplementation(libs.androidx.ui.test.junit4) // Compose UI Tests (essentiel)
+    androidTestImplementation(libs.junit.jupiter.api) // Normalement non utilisé pour les tests @Composable qui tournent avec un runner JUnit 4
+    androidTestImplementation(libs.mockk.android) // MockK pour les tests instrumentés
 
-    testImplementation(libs.mockk.core)
-    androidTestImplementation(libs.mockk.android)
-
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    androidTestImplementation(libs.junit.jupiter.api)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.turbine)
+    // Dépendances de Debug
+    debugImplementation(libs.androidx.ui.tooling) // Outils pour Compose (comme l'inspecteur de layout)
+    debugImplementation(libs.androidx.ui.test.manifest) // Pour le manifest des tests UI Compose
 }

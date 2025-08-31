@@ -13,9 +13,26 @@
     <string name="home_screen_button_settings">Paramètres</string>
     <string name="home_screen_button_info">Infos</string>
 
-    <!-- SettingsScreen -->
-    <string name="settings_screen_title">Paramètres</string>
-    <string name="settings_screen_placeholder_content">Contenu de l\'écran des Paramètres</string>
+    <!-- Settings Screen -->
+    <string name="settings_screen_title">Settings</string>
+    <string name="settings_error_loading_generic_message">Failed to load settings: %s</string> <!-- Added for error message formatting -->
+    <string name="settings_error_loading">Error Loading Settings</string> <!-- For ViewModel error state if needed as a title -->
+
+    <string name="settings_group_general">General</string>
+    <string name="settings_opening_threshold_label">Opening Score Threshold</string>
+    <string name="settings_victory_score_label">Victory Score</string>
+    <string name="settings_exact_victory_label">Exact Victory Score</string>
+    <string name="settings_exact_victory_desc">Player must reach the exact victory score to win.</string>
+
+    <string name="settings_group_advanced_rules">Advanced Rules</string>
+    <string name="settings_cancel_score_label">Cancel Opponent\'s Score</string>
+    <string name="settings_cancel_score_desc">If your total matches another player\'s, their score is cancelled.</string>
+    <string name="settings_allow_fifty_pts_label">Allow Scores of 50</string>
+    <string name="settings_allow_fifty_pts_desc">Allow banking scores that include 50 (e.g., a single 5 dice).</string>
+    <string name="settings_three_lives_rule_label">Three Lives Rule</string>
+    <string name="settings_three_lives_rule_desc">Three consecutive busts on the same score line resets that score.</string>
+    <string name="settings_steal_on_pass_label">Allow Steal on Pass</string>
+    <string name="settings_steal_on_pass_desc">Allow passing accumulated turn score and dice to the next player.</string>
 
     <!-- InfoScreen -->
     <string name="info_screen_title">Informations</string>

@@ -18,12 +18,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **New string resources in `strings.xml` for `InfoScreen` content.**
 - **UI tests for `InfoScreen` (`InfoScreenTest.kt`) covering content display, click actions, and empty states.**
 - **Necessary testing dependencies (JUnit Jupiter API, MockK Android) for instrumented tests.**
+- **Comprehensive UI tests for `SettingsScreen` (`SettingsScreenTest.kt`) covering loading and error states, content display, and interactions with all setting items (dropdowns and switches).**
+- **Unique test tags to `SwitchSettingItem` composables in `SettingsScreen.kt` to enable robust UI testing.**
+- **Helper function `createItemTestTag` in `SettingsScreen.kt` for consistent test tag generation.**
 
 ### Changed
 - Updated Kotlin and KSP plugin application in project-level `build.gradle.kts`.
 - Corrected Android Gradle Plugin (AGP) version in `libs.versions.toml`.
 - **Updated `Type.kt` to consistently apply `FontFamily.Monospace` across all Material 3 typography styles, ensuring a harmonized application theme.**
 - **Modified `strings.xml` string `info_app_version_label` to use a format string for dynamic version display.**
+- **Refactored `SettingsScreen.kt` previews to use fake dependencies instead of MockK, resolving compilation issues.**
+- **Standardized callback parameter names (using `onCheckedChange`) in `SwitchSettingItem` and its previews in `SettingsScreen.kt`.**
 
 ### Fixed
 - Resolved application startup crash related to Hilt initialization. This involved:
@@ -36,5 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Resolved build error `INSTALL_FAILED_USER_RESTRICTED` during UI test execution on physical device (MIUI) by disabling MIUI optimizations and enabling developer options for USB install.**
 - **Resolved build error due to duplicate `META-INF/LICENSE.md` files from JUnit Jupiter dependencies by adding packaging options to `app/build.gradle.kts`.**
 - **Corrected `InfoScreenTest` to accurately assert displayed text for personal info items, aligning with `InfoScreen`'s label formatting.**
+- **Resolved UI test failures in `SettingsScreenTest.kt` by correcting switch state assertion logic in `testSwitchInteraction` and ensuring test tags match production code.**
+- **Corrected various compilation errors in `SettingsScreen.kt` related to `mutableStateOf`, ViewModel instantiation in previews, and deprecated Kotlin functions (`toLowerCase` replaced with `lowercase`, `Divider` with `HorizontalDivider`, `menuAnchor` updated).**
+- **Resolved `Unresolved reference` errors for MockK in `SettingsScreen.kt` previews by switching to fake dependencies.**
 
 ### Removed
+
