@@ -21,6 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Comprehensive UI tests for `SettingsScreen` (`SettingsScreenTest.kt`) covering loading and error states, content display, and interactions with all setting items (dropdowns and switches).**
 - **Unique test tags to `SwitchSettingItem` composables in `SettingsScreen.kt` to enable robust UI testing.**
 - **Helper function `createItemTestTag` in `SettingsScreen.kt` for consistent test tag generation.**
+- **`DiceUi.kt` defining the UI representation of a die.**
+- **`GameUiState.kt` defining the state for the game screen UI.**
+- **Initial `GameViewModel.kt` with Hilt integration, managing `GameUiState`, and handling core game actions (roll, select dice, keep score, bank turn).**
+- **`FinalizeTurnUseCase.kt` to encapsulate the logic of finalizing a player's turn, including score validation against opening thresholds and game settings.**
+- **`ScoreBoard.kt` Composable to display player scores and turn information.**
+- **`DiceView.kt` Composable (with `DiceRow`) to display dice with selection and scoring states.**
+- **Initial implementation of `GameScreen.kt` integrating `GameViewModel`, `ScoreBoard`, `DiceRow`, action buttons, and game messages.**
+- **Comprehensive string resource extraction to `strings.xml` for `GameScreen`, `ScoreBoard`, `DiceView`, `HomeScreen`, `InfoScreen`, `SettingsScreen`, and `CommonTopAppBar`.**
 
 ### Changed
 - Updated Kotlin and KSP plugin application in project-level `build.gradle.kts`.
@@ -29,6 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Modified `strings.xml` string `info_app_version_label` to use a format string for dynamic version display.**
 - **Refactored `SettingsScreen.kt` previews to use fake dependencies instead of MockK, resolving compilation issues.**
 - **Standardized callback parameter names (using `onCheckedChange`) in `SwitchSettingItem` and its previews in `SettingsScreen.kt`.**
+- **`GameViewModel.kt` refactored to inject and use `SettingsRepository` for accessing `GameSettings` and `FinalizeTurnUseCase` for turn finalization logic.**
+- **Renamed `GameViewModel.bankScore()` to `keepSelectedDiceAndContinueTurn()` for clarity, and introduced `endTurnAndBankAccumulatedScore()` for turn completion.**
+- **Refined `canRoll` and `canBank` logic in `GameViewModel.kt` based on game state, player status (opened or not), and game settings (opening threshold).**
+- **Updated `strings.xml` to correctly include all necessary strings for newly developed UI components and resolve previous inconsistencies.**
 
 ### Fixed
 - Resolved application startup crash related to Hilt initialization. This involved:
@@ -44,6 +56,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Resolved UI test failures in `SettingsScreenTest.kt` by correcting switch state assertion logic in `testSwitchInteraction` and ensuring test tags match production code.**
 - **Corrected various compilation errors in `SettingsScreen.kt` related to `mutableStateOf`, ViewModel instantiation in previews, and deprecated Kotlin functions (`toLowerCase` replaced with `lowercase`, `Divider` with `HorizontalDivider`, `menuAnchor` updated).**
 - **Resolved `Unresolved reference` errors for MockK in `SettingsScreen.kt` previews by switching to fake dependencies.**
+- **Corrected type mismatches and unresolved references in `GameViewModel.kt` related to `Player` class properties (UUID for id, `totalScore` vs `currentScore`).**
+- **Ensured all referenced string resources in `GameScreen.kt`, `ScoreBoard.kt`, and `DiceView.kt` are correctly defined in `strings.xml`, resolving build errors.**
 
 ### Removed
 

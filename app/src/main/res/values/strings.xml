@@ -12,52 +12,114 @@
     <string name="home_screen_button_resume_game">Reprendre la Partie</string>
     <string name="home_screen_button_settings">Paramètres</string>
     <string name="home_screen_button_info">Infos</string>
+    <!-- Strings from older Home Screen section, might be used or be legacy -->
+    <string name="home_screen_title">Home</string> <!-- Likely used by a top bar if HomeScreen has its own title -->
+    <string name="home_play_game">Play Game</string> <!-- Could be an alternative to "Nouvelle Partie" or "Reprendre" -->
+    <string name="home_game_rules">Game Rules</string>
+    <string name="home_about">About</string>
 
     <!-- Settings Screen -->
-    <string name="settings_screen_title">Settings</string>
-    <string name="settings_error_loading_generic_message">Failed to load settings: %s</string> <!-- Added for error message formatting -->
-    <string name="settings_error_loading">Error Loading Settings</string> <!-- For ViewModel error state if needed as a title -->
+    <string name="settings_screen_title">Settings</string> <!-- Used by SettingsScreen -->
+    <string name="settings_error_loading_generic_message">Failed to load settings: %s</string>
+    <string name="settings_error_loading">Error Loading Settings</string>
 
-    <string name="settings_group_general">General</string>
-    <string name="settings_opening_threshold_label">Opening Score Threshold</string>
-    <string name="settings_victory_score_label">Victory Score</string>
-    <string name="settings_exact_victory_label">Exact Victory Score</string>
-    <string name="settings_exact_victory_desc">Player must reach the exact victory score to win.</string>
+    <string name="settings_group_general">General</string> <!-- Used by SettingsScreen -->
+    <string name="settings_opening_threshold_label">Opening Score Threshold</string> <!-- Used by SettingsScreen -->
+    <string name="settings_victory_score_label">Victory Score</string> <!-- Used by SettingsScreen -->
+    <string name="settings_exact_victory_label">Exact Victory Score</string> <!-- Used by SettingsScreen -->
+    <string name="settings_exact_victory_desc">Player must reach the exact victory score to win.</string> <!-- Used by SettingsScreen -->
 
-    <string name="settings_group_advanced_rules">Advanced Rules</string>
-    <string name="settings_cancel_score_label">Cancel Opponent\'s Score</string>
-    <string name="settings_cancel_score_desc">If your total matches another player\'s, their score is cancelled.</string>
-    <string name="settings_allow_fifty_pts_label">Allow Scores of 50</string>
-    <string name="settings_allow_fifty_pts_desc">Allow banking scores that include 50 (e.g., a single 5 dice).</string>
-    <string name="settings_three_lives_rule_label">Three Lives Rule</string>
-    <string name="settings_three_lives_rule_desc">Three consecutive busts on the same score line resets that score.</string>
-    <string name="settings_steal_on_pass_label">Allow Steal on Pass</string>
-    <string name="settings_steal_on_pass_desc">Allow passing accumulated turn score and dice to the next player.</string>
+    <string name="settings_group_advanced_rules">Advanced Rules</string> <!-- Used by SettingsScreen -->
+    <string name="settings_cancel_score_label">Cancel Opponent\'s Score</string> <!-- Used by SettingsScreen -->
+    <string name="settings_cancel_score_desc">If your total matches another player\'s, their score is cancelled.</string> <!-- Used by SettingsScreen -->
+    <string name="settings_allow_fifty_pts_label">Allow Scores of 50</string> <!-- Used by SettingsScreen -->
+    <string name="settings_allow_fifty_pts_desc">Allow banking scores that include 50 (e.g., a single 5 dice).</string> <!-- Used by SettingsScreen -->
+    <string name="settings_three_lives_rule_label">Three Lives Rule</string> <!-- Used by SettingsScreen -->
+    <string name="settings_three_lives_rule_desc">Three consecutive busts on the same score line resets that score.</string> <!-- Used by SettingsScreen -->
+    <string name="settings_steal_on_pass_label">Allow Steal on Pass</string> <!-- Used by SettingsScreen -->
+    <string name="settings_steal_on_pass_desc">Allow passing accumulated turn score and dice to the next player.</string> <!-- Used by SettingsScreen -->
+    <!-- Strings from older Settings Screen section -->
+    <string name="settings_opening_score_threshold">Opening Score Threshold</string> <!-- Duplicate key, ensure value consistency or choose one -->
+    <string name="settings_victory_score">Victory Score</string> <!-- Duplicate key -->
+    <string name="settings_victory_condition">Victory Condition</string>
+    <string name="settings_victory_condition_exact_score">Exact Score</string>
+    <string name="settings_victory_condition_exceed_score">Exceed Score</string>
+    <string name="settings_enable_score_cancellation">Enable Score Cancellation</string>
+    <string name="settings_allow_50_point_scores">Allow 50 Point Scores</string> <!-- Duplicate key -->
+    <string name="settings_enable_three_lives_rule">Enable Three Lives Rule</string> <!-- Duplicate key -->
+    <string name="settings_enable_steal_score_rule">Enable Steal Score Rule</string>
 
     <!-- InfoScreen -->
-    <string name="info_screen_title">Informations</string>
-    <string name="info_screen_placeholder_content">Contenu de l\'écran d\'Informations</string>
+    <string name="info_screen_title">Informations</string> <!-- Used by InfoScreen -->
+    <string name="info_screen_placeholder_content">Contenu de l\'écran d\'Informations</string> <!-- Placeholder, may not be used -->
 
-    <!-- GameScreen -->
-    <string name="game_screen_title">Le Jeu du 5000</string>
-    <string name="game_screen_placeholder_content">Contenu de l\'écran de Jeu - Que les dés roulent !</string>
+    <string name="info_section_personal_title">Mes Informations Personnelles</string> <!-- Used by InfoScreen -->
+    <string name="info_section_social_title">Retrouvez-moi sur</string> <!-- Used by InfoScreen -->
+    <string name="info_section_app_info_title">Informations sur l\'Application</string> <!-- Used by InfoScreen -->
+    <string name="info_app_version_label">Version de l\'application : %1$s</string> <!-- Used by InfoScreen -->
 
-    <!-- Strings for the new InfoScreen content -->
-    <string name="info_section_personal_title">Mes Informations Personnelles</string>
-    <string name="info_section_social_title">Retrouvez-moi sur</string>
-    <string name="info_section_app_info_title">Informations sur l\'Application</string>
-    <string name="info_app_version_label">Version de l\'application : %1$s</string>
-
-    <string name="info_developer_label">Développeur</string>
-    <string name="info_website_label">Site Web</string>
-    <string name="info_email_label">Email</string>
-    <string name="info_donate_label">Soutenez-moi</string>
+    <string name="info_developer_label">Développeur</string> <!-- Used by InfoScreen -->
+    <string name="info_website_label">Site Web</string> <!-- Used by InfoScreen -->
+    <string name="info_email_label">Email</string> <!-- Used by InfoScreen -->
+    <string name="info_donate_label">Soutenez-moi</string> <!-- Used by InfoScreen -->
 
     <!-- Content Descriptions for Social Media Icons -->
-    <string name="info_cd_linkedin">Profil LinkedIn</string>
-    <string name="info_cd_behance">Profil Behance</string>
-    <string name="info_cd_instagram">Profil Instagram</string>
-    <string name="info_cd_facebook">Profil Facebook</string>
-    <string name="info_cd_spotify">Profil Spotify</string>
-    <string name="info_cd_steam">Profil Steam</string>
+    <string name="info_cd_linkedin">Profil LinkedIn</string> <!-- Used by InfoScreen -->
+    <string name="info_cd_behance">Profil Behance</string> <!-- Used by InfoScreen -->
+    <string name="info_cd_instagram">Profil Instagram</string> <!-- Used by InfoScreen -->
+    <string name="info_cd_facebook">Profil Facebook</string> <!-- Used by InfoScreen -->
+    <string name="info_cd_spotify">Profil Spotify</string> <!-- Used by InfoScreen -->
+    <string name="info_cd_steam">Profil Steam</string> <!-- Used by InfoScreen -->
+
+    <!-- GameScreen related strings -->
+    <string name="game_screen_title">Le Jeu du 5000</string> <!-- Original general title -->
+    <string name="game_screen_title_with_player">Game - %1$s\'s Turn</string> <!-- Used by GameScreen for dynamic title -->
+    <string name="game_screen_placeholder_content">Contenu de l\'écran de Jeu - Que les dés roulent !</string> <!-- Placeholder -->
+
+    <!-- Game Screen UI Labels and Buttons (used by GameScreen.kt) -->
+    <string name="action_roll_dice">Roll Dice</string>
+    <string name="action_keep_selected_score">Keep Selected Score</string>
+    <string name="action_bank_total_turn_score">Bank Total Turn Score</string>
+    <string name="action_new_game">New Game</string>
+    <string name="game_over_message">Game Over!</string>
+
+    <!-- Game Screen UI Labels (from original strings.xml, may be used by ViewModel logic for messages) -->
+    <string name="game_screen_label_current_turn_score">Score du Tour : %1$d</string>
+    <string name="game_screen_label_selected_dice_score">Score Sélectionné : %1$d</string>
+    <string name="game_screen_label_potential_roll_score">Score Potentiel du Lancer : %1$d</string>
+
+    <!-- Game Screen Buttons (from original strings.xml) -->
+    <string name="game_screen_button_roll_dice">Lancer les Dés</string> <!-- Alternative to action_roll_dice, check usage -->
+    <string name="game_screen_button_keep_selected_score">Garder Sélection</string> <!-- Alternative -->
+    <string name="game_screen_button_bank_turn_score">Encaisser Tour</string> <!-- Alternative -->
+
+    <!-- Game Screen Messages (from original strings.xml, likely for dynamic messages from ViewModel) -->
+    <string name="game_screen_message_welcome">Bienvenue ! Prêt à jouer ?</string>
+    <string name="game_screen_message_player_turn">À vous de jouer, %1$s !</string>
+    <string name="game_screen_message_bust_first_roll">Dommage ! Aucun point sur ce lancer. Tour terminé.</string>
+    <string name="game_screen_message_bust_subsequent_roll">Dommage ! Aucun point avec les dés restants. Tour terminé.</string>
+    <string name="game_screen_message_select_dice">Sélectionnez vos dés.</string>
+    <string name="game_screen_message_cannot_keep_zero_score">Impossible de garder un score de 0. Sélectionnez des dés qui marquent.</string>
+    <string name="game_screen_message_kept_score_successfully">Score de sélection gardé : %1$d. Points du tour : %2$d. Relancez ou encaissez le tour.</string>
+    <string name="game_screen_message_game_over_winner_player">Partie terminée ! %1$s a gagné avec %2$d points !</string>
+    <string name="game_screen_message_turn_banked_successfully">Tour encaissé ! Votre score total est de %1$d.</string>
+    <string name="game_screen_message_failed_to_open">Vous devez atteindre au moins %1$d points pour ouvrir votre score. Tour terminé.</string>
+    <string name="game_screen_message_player_must_open">Vous n\'avez pas encore ouvert. Vous devez atteindre au moins %1$d pour encaisser.</string>
+
+    <!-- DiceView Content Description -->
+    <string name="dice_view_cd_dice_value">Dé affichant la valeur %1$d</string> <!-- Used by DiceView.kt -->
+
+    <!-- ScoreBoard specific strings (used by ScoreBoard.kt) -->
+    <string name="scoreboard_title_player">Player: %1$s</string>
+    <string name="scoreboard_total_score">Total Score</string>
+    <string name="scoreboard_turn_score">Turn Score</string>
+    <string name="scoreboard_selected_dice_score">Selected Dice</string>
+    <string name="scoreboard_potential_roll_score">Potential Roll</string>
+
+    <!-- Common strings (from original strings.xml, likely still useful) -->
+    <string name="error_unknown">An unknown error occurred.</string>
+    <string name="loading">Loading...</string>
+    <string name="retry">Retry</string>
+    <string name="back">Back</string>
+
 </resources>
