@@ -29,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`DiceView.kt` Composable (with `DiceRow`) to display dice with selection and scoring states.**
 - **Initial implementation of `GameScreen.kt` integrating `GameViewModel`, `ScoreBoard`, `DiceRow`, action buttons, and game messages.**
 - **Comprehensive string resource extraction to `strings.xml` for `GameScreen`, `ScoreBoard`, `DiceView`, `HomeScreen`, `InfoScreen`, `SettingsScreen`, and `CommonTopAppBar`.**
+- **Comprehensive unit tests for `GameViewModel` covering dice selection, game state management, and settings influence on game logic.**
+- **`GameViewModelSelectDiceTest.kt` testing dice selection functionality with MockK-based mocking of game engine and dependencies.**
+- **`GameViewModelNewGameTest.kt` testing game reset functionality and settings reload behavior.**
+- **`GameViewModelSettingsInfluenceTest.kt` testing dynamic game behavior changes when game settings are updated at runtime.**
 
 ### Changed
 - Updated Kotlin and KSP plugin application in project-level `build.gradle.kts`.
@@ -58,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Resolved `Unresolved reference` errors for MockK in `SettingsScreen.kt` previews by switching to fake dependencies.**
 - **Corrected type mismatches and unresolved references in `GameViewModel.kt` related to `Player` class properties (UUID for id, `totalScore` vs `currentScore`).**
 - **Ensured all referenced string resources in `GameScreen.kt`, `ScoreBoard.kt`, and `DiceView.kt` are correctly defined in `strings.xml`, resolving build errors.**
+- **Fixed MockK test setup issues in `GameViewModelSettingsInfluenceTest.kt` including proper mock clearing, StateFlow timing synchronization for dynamic settings updates, and precise mock matching for use case parameters.**
 
 ### Removed
 
