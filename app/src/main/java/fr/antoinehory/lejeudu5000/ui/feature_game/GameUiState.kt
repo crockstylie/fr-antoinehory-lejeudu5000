@@ -1,9 +1,11 @@
 package fr.antoinehory.lejeudu5000.ui.feature_game
 
 import androidx.compose.runtime.Immutable
+import java.util.UUID // Import UUID
 
 /**
  * Represents the complete UI state for the game screen.
+ * KDoc in English as requested.
  *
  * @property currentDice List of [DiceUi] objects representing the dice on the screen.
  * @property canRoll Boolean indicating if the player is allowed to roll the dice.
@@ -19,11 +21,11 @@ import androidx.compose.runtime.Immutable
  */
 @Immutable
 data class GameUiState(
-    val currentDice: List<DiceUi> = List(5) { DiceUi(id = it, value = 1) }, // Default to 5 dice showing 1
+    val currentDice: List<DiceUi> = List(5) { DiceUi(id = UUID.randomUUID(), value = 1) }, // Changed to use UUID
     val canRoll: Boolean = true,
     val canBank: Boolean = false,
     val turnScore: Int = 0,
-    val totalScore: Int = 0, // This might be for a single player context, or you might need a list of player scores
+    val totalScore: Int = 0,
     val gameMessage: String = "Welcome! Roll the dice to start.",
     val isGameOver: Boolean = false,
     val activePlayerName: String = "Player 1", // Placeholder, could be dynamic
@@ -32,6 +34,10 @@ data class GameUiState(
     val potentialScoreAfterRoll: Int = 0
 ) {
     companion object {
-        val  INITIAL = GameUiState()
+        /**
+         * Represents the initial, default state for the game screen.
+         * KDoc in English as requested.
+         */
+        val INITIAL = GameUiState()
     }
 }

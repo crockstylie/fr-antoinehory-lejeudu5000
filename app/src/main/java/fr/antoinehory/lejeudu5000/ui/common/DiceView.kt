@@ -22,11 +22,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import fr.antoinehory.lejeudu5000.ui.feature_game.DiceUi
+import fr.antoinehory.lejeudu5000.ui.feature_game.DiceUi // DiceUi now uses UUID for id
 import fr.antoinehory.lejeudu5000.ui.theme.LeJeuDu5000Theme
+import java.util.UUID // Import UUID
 
 /**
  * Displays a single die.
+ * KDoc in English as requested.
  *
  * @param diceUi The UI state of the die to display.
  * @param onClick Lambda to be invoked when the die is clicked.
@@ -39,9 +41,9 @@ fun DiceView(
     modifier: Modifier = Modifier
 ) {
     val borderColor = when {
-        diceUi.isScored -> MaterialTheme.colorScheme.outline.copy(alpha = 0.5f) // Scored dice are greyed out a bit
+        diceUi.isScored -> MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
         diceUi.isSelected -> MaterialTheme.colorScheme.primary
-        diceUi.canBeHeld -> MaterialTheme.colorScheme.secondary // Highlight if it can be held but not yet selected
+        diceUi.canBeHeld -> MaterialTheme.colorScheme.secondary
         else -> Color.Transparent
     }
     val backgroundColor = when {
@@ -51,16 +53,16 @@ fun DiceView(
 
     Surface(
         modifier = modifier
-            .size(64.dp) // Fixed size for dice
+            .size(64.dp)
             .aspectRatio(1f)
             .border(
                 width = 2.dp,
                 color = borderColor,
                 shape = MaterialTheme.shapes.medium
             )
-            .padding(4.dp) // Padding inside the border
+            .padding(4.dp)
             .clickable(
-                enabled = diceUi.canBeHeld && !diceUi.isScored, // Clickable only if it can be held and not already scored
+                enabled = diceUi.canBeHeld && !diceUi.isScored,
                 onClick = onClick
             ),
         shape = MaterialTheme.shapes.medium,
@@ -69,7 +71,7 @@ fun DiceView(
     ) {
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxHeight() // Ensure the Box fills the Surface
+            modifier = Modifier.fillMaxHeight()
         ) {
             Text(
                 text = diceUi.value.toString(),
@@ -83,15 +85,16 @@ fun DiceView(
 
 /**
  * Displays a row of dice.
+ * KDoc in English as requested.
  *
  * @param diceList The list of DiceUi states to display.
- * @param onDiceClick Lambda to be invoked when a die is clicked, providing the die's ID.
+ * @param onDiceClick Lambda to be invoked when a die is clicked, providing the die's ID (UUID).
  * @param modifier Modifier for this composable.
  */
 @Composable
 fun DiceRow(
     diceList: List<DiceUi>,
-    onDiceClick: (Int) -> Unit,
+    onDiceClick: (UUID) -> Unit, // Changed from (Int) -> Unit
     modifier: Modifier = Modifier
 ) {
     LazyRow(
@@ -99,10 +102,10 @@ fun DiceRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(horizontal = 8.dp)
     ) {
-        items(diceList, key = { it.id }) {
+        items(diceList, key = { it.id }) { diceUi -> // diceUi is the correct name here
             DiceView(
-                diceUi = it,
-                onClick = { onDiceClick(it.id) }
+                diceUi = diceUi,
+                onClick = { onDiceClick(diceUi.id) } // Pass diceUi.id which is UUID
             )
         }
     }
@@ -110,11 +113,10 @@ fun DiceRow(
 
 @Preview(showBackground = true)
 @Composable
-fun DiceViewPreview_Selectable()
-{
+fun DiceViewPreview_Selectable() {
     LeJeuDu5000Theme {
         DiceView(
-            diceUi = DiceUi(id = 0, value = 5, isSelected = false, canBeHeld = true, isScored = false),
+            diceUi = DiceUi(id = UUID.randomUUID(), value = 5, isSelected = false, canBeHeld = true, isScored = false),
             onClick = {}
         )
     }
@@ -122,11 +124,10 @@ fun DiceViewPreview_Selectable()
 
 @Preview(showBackground = true)
 @Composable
-fun DiceViewPreview_Selected()
-{
+fun DiceViewPreview_Selected() {
     LeJeuDu5000Theme {
         DiceView(
-            diceUi = DiceUi(id = 1, value = 1, isSelected = true, canBeHeld = true, isScored = false),
+            diceUi = DiceUi(id = UUID.randomUUID(), value = 1, isSelected = true, canBeHeld = true, isScored = false),
             onClick = {}
         )
     }
@@ -134,11 +135,10 @@ fun DiceViewPreview_Selected()
 
 @Preview(showBackground = true)
 @Composable
-fun DiceViewPreview_Scored()
-{
+fun DiceViewPreview_Scored() {
     LeJeuDu5000Theme {
         DiceView(
-            diceUi = DiceUi(id = 2, value = 3, isSelected = false, canBeHeld = false, isScored = true),
+            diceUi = DiceUi(id = UUID.randomUUID(), value = 3, isSelected = false, canBeHeld = false, isScored = true),
             onClick = {}
         )
     }
@@ -146,11 +146,10 @@ fun DiceViewPreview_Scored()
 
 @Preview(showBackground = true)
 @Composable
-fun DiceViewPreview_NotHoldable()
-{
+fun DiceViewPreview_NotHoldable() {
     LeJeuDu5000Theme {
         DiceView(
-            diceUi = DiceUi(id = 3, value = 2, isSelected = false, canBeHeld = false, isScored = false),
+            diceUi = DiceUi(id = UUID.randomUUID(), value = 2, isSelected = false, canBeHeld = false, isScored = false),
             onClick = {}
         )
     }
@@ -162,13 +161,13 @@ fun DiceRowPreview() {
     LeJeuDu5000Theme {
         DiceRow(
             diceList = listOf(
-                DiceUi(id = 0, value = 1, isSelected = true, canBeHeld = true, isScored = false),
-                DiceUi(id = 1, value = 5, isSelected = false, canBeHeld = true, isScored = false),
-                DiceUi(id = 2, value = 2, isSelected = false, canBeHeld = false, isScored = false),
-                DiceUi(id = 3, value = 3, isSelected = false, canBeHeld = true, isScored = true),
-                DiceUi(id = 4, value = 4, isSelected = false, canBeHeld = false, isScored = false)
+                DiceUi(id = UUID.randomUUID(), value = 1, isSelected = true, canBeHeld = true, isScored = false),
+                DiceUi(id = UUID.randomUUID(), value = 5, isSelected = false, canBeHeld = true, isScored = false),
+                DiceUi(id = UUID.randomUUID(), value = 2, isSelected = false, canBeHeld = false, isScored = false),
+                DiceUi(id = UUID.randomUUID(), value = 3, isSelected = false, canBeHeld = true, isScored = true),
+                DiceUi(id = UUID.randomUUID(), value = 4, isSelected = false, canBeHeld = false, isScored = false)
             ),
-            onDiceClick = {}
+            onDiceClick = {} // Preview onDiceClick doesn't use the ID, so this is fine
         )
     }
 }

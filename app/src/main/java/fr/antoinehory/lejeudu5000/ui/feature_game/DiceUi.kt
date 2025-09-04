@@ -1,11 +1,13 @@
 package fr.antoinehory.lejeudu5000.ui.feature_game
 
 import androidx.compose.runtime.Immutable
+import java.util.UUID // Import a UUID
 
 /**
  * Represents the UI state for a single die in the game.
+ * KDoc in English as requested.
  *
- * @property id A unique identifier for the die (e.g., 0 to 4 for 5 dice).
+ * @property id A unique identifier for the die instance, aligns with domain model.
  * @property value The current face value of the die.
  * @property isSelected Indicates whether the user has selected this die in the current turn.
  * @property canBeHeld Indicates if the die is part of a scoring combination from the latest roll
@@ -15,7 +17,7 @@ import androidx.compose.runtime.Immutable
  */
 @Immutable
 data class DiceUi(
-    val id: Int,
+    val id: UUID, // Changed from Int to UUID
     val value: Int,
     val isSelected: Boolean = false,
     val canBeHeld: Boolean = false,

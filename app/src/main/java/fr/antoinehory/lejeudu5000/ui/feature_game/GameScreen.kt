@@ -20,7 +20,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+// import androidx.compose.ui.graphics.Color // Not used directly, MaterialTheme provides colors
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -34,10 +34,12 @@ import fr.antoinehory.lejeudu5000.ui.common.CommonTopAppBar
 import fr.antoinehory.lejeudu5000.ui.common.DiceRow
 import fr.antoinehory.lejeudu5000.ui.common.ScoreBoard
 import fr.antoinehory.lejeudu5000.ui.theme.LeJeuDu5000Theme
+import java.util.UUID // Import UUID
 
 /**
  * Composable function for the Game screen.
  * This is where the main gameplay takes place.
+ * KDoc in English as requested.
  *
  * @param navController The NavController used for navigation.
  * @param viewModel The GameViewModel, injected by Hilt.
@@ -73,7 +75,7 @@ fun GameScreen(
             val messageColor = if (uiState.gameMessage.startsWith("Bust!") || uiState.gameMessage.startsWith("Dommage !")) {
                 MaterialTheme.colorScheme.error
             } else {
-                MaterialTheme.colorScheme.onSurface
+                MaterialTheme.colorScheme.onSurface // Or specific color from theme
             }
             Text(
                 text = uiState.gameMessage,
@@ -88,7 +90,7 @@ fun GameScreen(
 
             DiceRow(
                 diceList = uiState.currentDice,
-                onDiceClick = { diceId -> viewModel.selectDice(diceId) },
+                onDiceClick = { diceId -> viewModel.selectDice(diceId) }, // diceId is now UUID
                 modifier = Modifier.padding(vertical = 16.dp)
             )
 
@@ -111,7 +113,6 @@ fun GameScreen(
                     Spacer(modifier = Modifier.padding(horizontal = 4.dp))
                     ElevatedButton(
                         onClick = { viewModel.keepSelectedDiceAndContinueTurn() },
-                        // Enable if selected dice score > 0. ViewModel logic will handle if it's a valid keep.
                         enabled = !uiState.isGameOver,
                         modifier = Modifier.weight(1f)
                     ) {
@@ -149,19 +150,14 @@ fun GameScreen(
 @Composable
 fun GameScreenPreview_Default() {
     LeJeuDu5000Theme {
-        // For preview, we cannot easily use hiltViewModel().
-        // We pass a dummy NavController and a GameScreenContent composable
-        // or mock the GameUiState if GameScreen itself takes it directly.
-        // Here, we provide a basic GameScreenContent that takes uiState.
-
         val previewUiState = GameUiState(
             activePlayerName = "Player 1",
             currentDice = listOf(
-                DiceUi(0, 1, false, true, false),
-                DiceUi(1, 5, false, true, false),
-                DiceUi(2, 2, false, false, false),
-                DiceUi(3, 3, false, false, false),
-                DiceUi(4, 4, false, false, false)
+                DiceUi(id = UUID.randomUUID(), value = 1, isSelected = false, canBeHeld = true, isScored = false),
+                DiceUi(id = UUID.randomUUID(), value = 5, isSelected = false, canBeHeld = true, isScored = false),
+                DiceUi(id = UUID.randomUUID(), value = 2, isSelected = false, canBeHeld = false, isScored = false),
+                DiceUi(id = UUID.randomUUID(), value = 3, isSelected = false, canBeHeld = false, isScored = false),
+                DiceUi(id = UUID.randomUUID(), value = 4, isSelected = false, canBeHeld = false, isScored = false)
             ),
             canRoll = true,
             canBank = false,
@@ -172,20 +168,7 @@ fun GameScreenPreview_Default() {
             gameMessage = "Welcome! Roll the dice.",
             isGameOver = false
         )
-        // Dummy NavController for preview
         val navController = rememberNavController()
-        // As GameScreen directly uses hiltViewModel, we can't easily preview it without Hilt context.
-        // A common pattern is to extract the main content of GameScreen into a separate
-        // composable that accepts uiState and lambdas for actions.
-        // For now, this preview will rely on the default constructor of GameViewModel if Hilt isn't fully set up for previews.
-        // Or, use a tool like @PreviewWithFakeDependencies if available.
-
-        // Simplified for this example, assuming GameScreen can render with a default VM or mocked state in preview.
-        // This direct call to GameScreen might not work perfectly in Preview if Hilt VM is strict.
-        // GameScreen(navController = navController) //This will crash preview if VM needs Hilt graph
-
-        // To make preview work better, GameScreen should ideally take uiState and event lambdas as params
-        // For now, let's create a more basic preview based on what GameScreen *tries* to do.
         Scaffold(
             topBar = {
                 CommonTopAppBar(
@@ -213,15 +196,15 @@ fun GameScreenPreview_Bust() {
         val bustState = GameUiState(
             activePlayerName = "Player 1",
             currentDice = listOf(
-                DiceUi(0, 2, false, false, true), // Dice are scored (not available)
-                DiceUi(1, 3, false, false, true),
-                DiceUi(2, 4, false, false, true),
-                DiceUi(3, 6, false, false, true),
-                DiceUi(4, 2, false, false, true)
+                DiceUi(id = UUID.randomUUID(), value = 2, isSelected = false, canBeHeld = false, isScored = true),
+                DiceUi(id = UUID.randomUUID(), value = 3, isSelected = false, canBeHeld = false, isScored = true),
+                DiceUi(id = UUID.randomUUID(), value = 4, isSelected = false, canBeHeld = false, isScored = true),
+                DiceUi(id = UUID.randomUUID(), value = 6, isSelected = false, canBeHeld = false, isScored = true),
+                DiceUi(id = UUID.randomUUID(), value = 2, isSelected = false, canBeHeld = false, isScored = true)
             ),
             canRoll = false,
-            canBank = false, // Cannot bank on a bust if turn score becomes 0 or fails opening
-            turnScore = 0, // Assume turn score was wiped or not enough to open
+            canBank = false,
+            turnScore = 0,
             totalScore = 1200,
             selectedDiceScore = 0,
             potentialScoreAfterRoll = 0,
@@ -248,3 +231,4 @@ fun GameScreenPreview_Bust() {
         }
     }
 }
+

@@ -47,123 +47,84 @@ class SettingsViewModel @Inject constructor(
     }
 
     /**
-     * Loads the current game settings from the repository and updates the UI state.
-     * This function is called upon ViewModel initialization. It collects the [GameSettings]
-     * Flow from the repository, updating the [uiState] with loading, success, or error states.
+     * ✅ Amélioration : Gestion d'erreurs robuste
      */
     private fun loadSettings() {
-        viewModelScope.launch(dispatchers.io) { // Use IO dispatcher for data operations
+        viewModelScope.launch {
             settingsRepository.getGameSettings()
-                .onStart {
-                    _uiState.update { currentState ->
-                        currentState.copy(isLoading = true, error = null)
-                    }
+                .onStart { 
+                    _uiState.update { it.copy(isLoading = true, error = null) }
                 }
                 .catch { exception ->
-                    _uiState.update { currentState ->
-                        currentState.copy(
-                            isLoading = false,
-                            // Ensure this string is internationalized (R.string.settings_error_loading)
-                            error = "Failed to load settings: ${exception.localizedMessage}"
-                        )
+                    _uiState.update { 
+                        it.copy(
+                            isLoading = false, 
+                            error = "Erreur lors du chargement des paramètres: ${exception.message}"
+                        ) 
                     }
-                    // Consider logging the exception for debugging purposes
-                    // Log.e("SettingsViewModel", "Error loading settings", exception)
                 }
                 .collect { gameSettings ->
-                    _uiState.update { currentState ->
-                        currentState.copy(
-                            isLoading = false,
+                    _uiState.update { 
+                        it.copy(
                             gameSettings = gameSettings,
+                            isLoading = false,
                             error = null
-                        )
+                        ) 
                     }
                 }
         }
     }
 
     /**
-     * Updates the opening score threshold setting.
-     * Launches a coroutine on the IO dispatcher to update the setting via the repository.
-     *
-     * @param threshold The new opening score threshold value (e.g., 500, 750, 1000).
+     * ✅ Fonction utilitaire pour éviter la duplication de code
      */
-    fun onOpeningScoreThresholdChanged(threshold: Int) {
+    private fun updateSetting(updateAction: suspend () -> Unit) {
         viewModelScope.launch(dispatchers.io) {
-            settingsRepository.updateOpeningScoreThreshold(threshold)
-            // The uiState will automatically update due to the Flow collection in loadSettings
+            try {
+                updateAction()
+                // Effacer l'erreur précédente si l'opération réussit
+                _uiState.update { it.copy(error = null) }
+            } catch (e: Exception) {
+                _uiState.update { 
+                    it.copy(error = "Erreur lors de la sauvegarde: ${e.message}") 
+                }
+            }
         }
     }
 
     /**
-     * Updates the victory score setting.
-     * Launches a coroutine on the IO dispatcher to update the setting via the repository.
-     *
-     * @param score The new victory score value (e.g., 5000, 10000).
+     * Efface le message d'erreur
      */
-    fun onVictoryScoreChanged(score: Int) {
-        viewModelScope.launch(dispatchers.io) {
-            settingsRepository.updateVictoryScore(score)
-        }
+    fun clearError() {
+        _uiState.update { it.copy(error = null) }
     }
 
-    /**
-     * Updates the 'must win on exact score' setting.
-     * Launches a coroutine on the IO dispatcher to update the setting via the repository.
-     *
-     * @param mustBeExact True if victory must be on exact score, false otherwise.
-     */
-    fun onMustWinOnExactScoreChanged(mustBeExact: Boolean) {
-        viewModelScope.launch(dispatchers.io) {
-            settingsRepository.updateMustWinOnExactScore(mustBeExact)
-        }
+    // ✅ Toutes les fonctions update utilisent maintenant la fonction utilitaire
+    fun onOpeningScoreThresholdChanged(threshold: Int) = updateSetting {
+        settingsRepository.updateOpeningScoreThreshold(threshold)
     }
 
-    /**
-     * Updates the 'cancel opponent score on match' setting.
-     * Launches a coroutine on the IO dispatcher to update the setting via the repository.
-     *
-     * @param cancelOnMatch True if opponent's score should be cancelled on match, false otherwise.
-     */
-    fun onCancelOpponentScoreOnMatchChanged(cancelOnMatch: Boolean) {
-        viewModelScope.launch(dispatchers.io) {
-            settingsRepository.updateCancelOpponentScoreOnMatch(cancelOnMatch)
-        }
+    fun onVictoryScoreChanged(score: Int) = updateSetting {
+        settingsRepository.updateVictoryScore(score)
     }
 
-    /**
-     * Updates the 'allow fifty point scores' setting.
-     * Launches a coroutine on the IO dispatcher to update the setting via the repository.
-     *
-     * @param allowFifty True if scores ending in 50 (e.g., from a single '5' die) are allowed, false otherwise.
-     */
-    fun onAllowFiftyPointScoresChanged(allowFifty: Boolean) {
-        viewModelScope.launch(dispatchers.io) {
-            settingsRepository.updateAllowFiftyPointScores(allowFifty)
-        }
+    fun onMustWinOnExactScoreChanged(mustBeExact: Boolean) = updateSetting {
+        settingsRepository.updateMustWinOnExactScore(mustBeExact)
     }
 
-    /**
-     * Updates the 'use three lives rule' setting.
-     * Launches a coroutine on the IO dispatcher to update the setting via the repository.
-     *
-     * @param useThreeLives True if the three lives rule is active, false otherwise.
-     */
-    fun onUseThreeLivesRuleChanged(useThreeLives: Boolean) {
-        viewModelScope.launch(dispatchers.io) {
-            settingsRepository.updateUseThreeLivesRule(useThreeLives)
-        }
+    fun onCancelOpponentScoreOnMatchChanged(cancelOnMatch: Boolean) = updateSetting {
+        settingsRepository.updateCancelOpponentScoreOnMatch(cancelOnMatch)
     }
 
-    /**
-     * Updates the 'allow steal on pass' setting.
-     * Launches a coroutine on the IO dispatcher to update the setting via the repository.
-     *
-     * @param allowSteal True if stealing score on pass is allowed, false otherwise.
-     */
-    fun onAllowStealOnPassChanged(allowSteal: Boolean) {
-        viewModelScope.launch(dispatchers.io) {
-            settingsRepository.updateAllowStealOnPass(allowSteal)
-        }
+    fun onAllowFiftyPointScoresChanged(allowFifty: Boolean) = updateSetting {
+        settingsRepository.updateAllowFiftyPointScores(allowFifty)
+    }
+
+    fun onUseThreeLivesRuleChanged(useThreeLives: Boolean) = updateSetting {
+        settingsRepository.updateUseThreeLivesRule(useThreeLives)
+    }
+
+    fun onAllowStealOnPassChanged(allowSteal: Boolean) = updateSetting {
+        settingsRepository.updateAllowStealOnPass(allowSteal)
     }
 }

@@ -11,12 +11,11 @@ import fr.antoinehory.lejeudu5000.domain.model.GameState
 import fr.antoinehory.lejeudu5000.domain.model.Player
 import fr.antoinehory.lejeudu5000.domain.model.TurnData
 import fr.antoinehory.lejeudu5000.domain.usecase.FinalizeTurnUseCase
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -44,7 +43,7 @@ class GameViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = GameSettings() // Default settings, will be updated by the flow
+            initialValue = GameSettings()
         )
 
     /**
@@ -57,7 +56,7 @@ class GameViewModel @Inject constructor(
         return GameState(
             players = listOf(initialPlayer),
             currentPlayerIndex = 0,
-            turnData = TurnData(diceOnTable = List(5) { Dice(value = 1, isAvailable = true) }),
+            turnData = TurnData(diceOnTable = List(5) { Dice(id = UUID.randomUUID(), value = 1) }),
             isGameOver = false
         )
     }
@@ -66,12 +65,12 @@ class GameViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(mapDomainToUiState(_domainGameState.value))
 
     /**
-     * The UI state for the game screen, observed by the Composable.
+     * UI state flow for the game screen.
      */
     val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
 
-    private fun hasPlayerOpened(player: Player): Boolean {
-        return player.scoreHistory.isNotEmpty()
+    private fun hasPlayerOpened(player: Player, currentSettings: GameSettings): Boolean {
+        return player.scoreHistory.any { it.recordedScore >= currentSettings.openingScoreThreshold } || player.totalScore >= currentSettings.openingScoreThreshold
     }
 
     /**
@@ -82,11 +81,11 @@ class GameViewModel @Inject constructor(
      */
     private fun mapDomainToUiState(domainState: GameState): GameUiState {
         if (domainState.isGameOver) {
-            val winner = domainState.players.maxByOrNull { it.totalScore } // Simple winner logic
+            val winner = domainState.players.maxByOrNull { it.totalScore }
             return GameUiState(
-                currentDice = domainState.turnData.diceOnTable.mapIndexed { index, domainDice ->
-                    mapDomainToUiDice(domainDice, index, false) // Not relevant if game over
-                },
+                currentDice = domainState.turnData.diceOnTable.map { domainDice ->
+                    mapDomainToUiDice(domainDice, false)
+                }.sortedBy { it.id.toString() },
                 canRoll = false,
                 canBank = false,
                 turnScore = 0,
@@ -102,22 +101,20 @@ class GameViewModel @Inject constructor(
 
         val currentDomainTurnData = domainState.turnData
         val currentPlayer = domainState.getCurrentPlayer()
-        val gameMessage = "It's ${currentPlayer.name}'s turn!"
+        val gameMessage = "It's ${currentPlayer.name}'s turn."
 
-        // At the start of a turn (or after banking), player can always roll if dice are available.
-        // Player cannot bank yet as no score has been made in this new turn segment.
         return GameUiState(
-            currentDice = currentDomainTurnData.diceOnTable.mapIndexed { index, domainDice ->
+            currentDice = currentDomainTurnData.diceOnTable.map { domainDice ->
                 val canThisDieBeHeld = gameEngine.calculateScore(listOf(domainDice)) > 0 && domainDice.isAvailable
-                mapDomainToUiDice(domainDice, index, canThisDieBeHeld)
-            },
+                mapDomainToUiDice(domainDice, canThisDieBeHeld)
+            }.sortedBy { it.id.toString() },
             canRoll = !domainState.isGameOver && currentDomainTurnData.diceOnTable.any { it.isAvailable },
-            canBank = false, // Cannot bank at the very start of a turn segment
+            canBank = false,
             turnScore = currentDomainTurnData.currentTurnScore,
             totalScore = currentPlayer.totalScore,
             selectedDiceScore = 0,
-            potentialScoreAfterRoll = 0, // Will be updated after a roll
-            isTurnOver = false, // A new turn segment is not over yet
+            potentialScoreAfterRoll = 0,
+            isTurnOver = false,
             gameMessage = gameMessage,
             activePlayerName = currentPlayer.name,
             isGameOver = domainState.isGameOver
@@ -125,63 +122,44 @@ class GameViewModel @Inject constructor(
     }
 
     /**
-     * Handles the action of rolling the dice.
+     * Handles the dice roll action.
      */
     fun rollDice() {
         if (_domainGameState.value.isGameOver || !_uiState.value.canRoll) return
 
         viewModelScope.launch {
             val currentDomainState = _domainGameState.value
-            val newDomainStateAfterRoll = gameEngine.rollDice(currentDomainState) // GameEngine handles dice to roll
+            val newDomainStateAfterRoll = gameEngine.rollDice(currentDomainState)
             _domainGameState.value = newDomainStateAfterRoll
 
             val potentialScoreOfAvailableDice = gameEngine.calculateScore(newDomainStateAfterRoll.turnData.diceOnTable.filter { it.isAvailable })
-            val isBust = potentialScoreOfAvailableDice == 0 && newDomainStateAfterRoll.turnData.diceOnTable.any{it.isAvailable} // Bust only if rolled dice score 0
+            val isBust = potentialScoreOfAvailableDice == 0 && newDomainStateAfterRoll.turnData.diceOnTable.any { it.isAvailable }
 
-            _uiState.update { currentState ->
+            _uiState.update {
                 val currentPlayer = newDomainStateAfterRoll.getCurrentPlayer()
-                val playerHasOpened = hasPlayerOpened(currentPlayer)
+                val playerHasOpened = hasPlayerOpened(currentPlayer, gameSettings.value)
                 val openingThreshold = gameSettings.value.openingScoreThreshold
+                val accumulatedScoreSoFar = newDomainStateAfterRoll.turnData.currentTurnScore
 
-                val accumulatedScoreSoFar = newDomainStateAfterRoll.turnData.currentTurnScore // Score from previous keeps in this turn
-
-                // Player can bank if:
-                // 1. Not a bust.
-                // 2. EITHER they have an accumulated score from previous keeps in this turn
-                //    OR the current roll itself has a potential score.
-                // 3. If they haven't opened, the total potential bankable score (accumulated + potential of current roll) meets the threshold.
                 val canBankAfterRoll = !isBust &&
                         (accumulatedScoreSoFar > 0 || potentialScoreOfAvailableDice > 0) &&
                         (playerHasOpened || (accumulatedScoreSoFar + potentialScoreOfAvailableDice) >= openingThreshold)
 
-
-                currentState.copy(
-                    currentDice = newDomainStateAfterRoll.turnData.diceOnTable.mapIndexed { index, domainDice ->
-                        val canThisDieBeHeld = gameEngine.calculateScore(listOf(domainDice)) > 0 && domainDice.isAvailable
-                        mapDomainToUiDice(domainDice, index, canThisDieBeHeld)
-                    },
+                mapDomainToUiState(newDomainStateAfterRoll).copy(
                     potentialScoreAfterRoll = potentialScoreOfAvailableDice,
-                    turnScore = accumulatedScoreSoFar, // Turn score from keeps, doesn't include current roll's potential yet
-                    totalScore = currentPlayer.totalScore,
-                    selectedDiceScore = 0, // Reset on new roll
-                    canRoll = !isBust && newDomainStateAfterRoll.turnData.diceOnTable.any { it.isAvailable }, // Can roll if not a bust and dice are available
+                    canRoll = !isBust && newDomainStateAfterRoll.turnData.diceOnTable.any { it.isAvailable },
                     canBank = canBankAfterRoll,
                     gameMessage = when {
-                        isBust && newDomainStateAfterRoll.turnData.diceOnTable.all { it.isAvailable } -> "Bust! No points this roll. Turn over." // Bust on first roll segment
-                        isBust -> "Bust! No points with remaining dice. Turn over." // Bust on subsequent roll segment
+                        isBust && newDomainStateAfterRoll.turnData.diceOnTable.all { it.isAvailable } -> "Bust! No points this roll. Turn over."
+                        isBust -> "Bust! No points with remaining dice. Turn over."
                         else -> "Select dice to keep or roll again."
                     },
-                    isTurnOver = isBust,
-                    activePlayerName = currentPlayer.name
+                    isTurnOver = isBust
                 )
             }
             if (isBust) {
-                // If bust, automatically end turn.
-                // The score to finalize is what was accumulated BEFORE this busting roll.
                 val stateToFinalize = newDomainStateAfterRoll.copy(
-                    turnData = newDomainStateAfterRoll.turnData.copy(
-                        currentTurnScore = currentDomainState.turnData.currentTurnScore // Score before this bust
-                    )
+                    turnData = newDomainStateAfterRoll.turnData.copy(currentTurnScore = 0)
                 )
                 endTurnAndBankAccumulatedScore(stateToFinalize)
             }
@@ -189,21 +167,18 @@ class GameViewModel @Inject constructor(
     }
 
     /**
-     * Handles selection or deselection of a die by the player.
-     * @param diceId The ID of the die being selected/deselected.
+     * Handles the selection or deselection of a die.
+     * @param diceId The UUID of the die to select/deselect.
      */
-    fun selectDice(diceId: Int) {
+    fun selectDice(diceId: UUID) {
         if (_domainGameState.value.isGameOver) return
 
         viewModelScope.launch {
             val currentUiDiceList = _uiState.value.currentDice
             val domainDiceList = _domainGameState.value.turnData.diceOnTable
+            val correspondingDomainDie = domainDiceList.find { it.id == diceId }
 
-            val targetUiDie = currentUiDiceList.find { it.id == diceId }
-            val correspondingDomainDie = domainDiceList.getOrNull(diceId)
-
-            if (targetUiDie == null || correspondingDomainDie == null || !correspondingDomainDie.isAvailable) {
-                // Cannot select a die that is not available (e.g., already scored in a previous segment of this turn)
+            if (correspondingDomainDie == null || !correspondingDomainDie.isAvailable) {
                 return@launch
             }
 
@@ -216,139 +191,142 @@ class GameViewModel @Inject constructor(
 
             _uiState.update { currentState ->
                 val currentPlayer = _domainGameState.value.getCurrentPlayer()
-                val playerHasOpened = hasPlayerOpened(currentPlayer)
+                val playerHasOpened = hasPlayerOpened(currentPlayer, gameSettings.value)
                 val openingThreshold = gameSettings.value.openingScoreThreshold
                 val accumulatedTurnScore = _domainGameState.value.turnData.currentTurnScore
 
-                // Player can bank if:
-                // 1. The current selection scores points (currentSelectedScore > 0)
-                //    OR they already have an accumulated score from previous keeps in this turn.
-                // 2. If they haven't opened, the total bankable score (accumulated + currentSelected) meets threshold.
                 val canBankAfterSelection = (currentSelectedScore > 0 || accumulatedTurnScore > 0) &&
                         (playerHasOpened || (accumulatedTurnScore + currentSelectedScore) >= openingThreshold)
 
-                // Player can roll if:
-                // 1. No dice are selected (player might be deselecting).
-                // 2. OR, the current selection scores points AND there are unselected available dice remaining.
-                // 3. OR, the current selection scores 0 (invalid selection, player should be able to roll if they unselect all or fix selection).
                 val canRollAfterSelection = selectedUiDiceForScoring.isEmpty() ||
-                        (currentSelectedScore > 0 && updatedDiceUiList.any { uiDice -> !uiDice.isSelected && (domainDiceList.getOrNull(uiDice.id)?.isAvailable == true) }) ||
-                        currentSelectedScore == 0 // Allows rolling if selection is invalid (scores 0)
+                        (currentSelectedScore > 0 && updatedDiceUiList.any { uiDice ->
+                            !uiDice.isSelected && (domainDiceList.find { it.id == uiDice.id }?.isAvailable == true)
+                        }) ||
+                        (currentSelectedScore == 0 && selectedUiDiceForScoring.isNotEmpty())
 
                 currentState.copy(
-                    currentDice = updatedDiceUiList,
+                    currentDice = updatedDiceUiList.sortedBy { it.id.toString() },
                     selectedDiceScore = currentSelectedScore,
                     canBank = canBankAfterSelection,
                     canRoll = canRollAfterSelection
-                    // gameMessage might be updated here too, e.g., "Invalid selection" if currentSelectedScore is 0 but dice are selected.
                 )
             }
         }
     }
 
     /**
-     * Player chooses to keep the currently selected scoring dice and continue their turn.
-     * The score of these dice is added to the turn's accumulated score.
-     * The kept dice become unavailable for the next roll in this turn.
-     * If all dice are scored, they all become available again.
+     * Handles the action of keeping selected dice and continuing the turn.
      */
     fun keepSelectedDiceAndContinueTurn() {
-        if (_domainGameState.value.isGameOver || _uiState.value.selectedDiceScore == 0) {
-            // Cannot keep dice that don't score or if game is over.
-            // Consider updating gameMessage for invalid keep attempt.
-            if (_uiState.value.selectedDiceScore == 0) {
-                _uiState.update { it.copy(gameMessage = "Invalid selection. These dice don't score.") }
-            }
-            return
-        }
-
         viewModelScope.launch {
-            val currentSelectedDiceValue = _uiState.value.selectedDiceScore
-            val currentDomainState = _domainGameState.value
-            val selectedUiDice = _uiState.value.currentDice.filter { it.isSelected }
+            if (_domainGameState.value.isGameOver) return@launch
 
-            val newDiceForDomain = currentDomainState.turnData.diceOnTable.mapIndexed { index, oldDomainDice ->
-                if (selectedUiDice.any { it.id == index }) {
-                    oldDomainDice.copy(isAvailable = false) // Mark selected dice as unavailable
+            if (_uiState.value.selectedDiceScore == 0) {
+                val message = if (_uiState.value.currentDice.any { it.isSelected }) {
+                    "Invalid selection. These dice don't score."
                 } else {
-                    oldDomainDice
+                    "Invalid action: selected score is 0. Select scoring dice."
                 }
+                _uiState.update { it.copy(gameMessage = message) }
+                return@launch
             }
 
-            val allDiceNowScoredAndUnavailable = newDiceForDomain.all { !it.isAvailable }
-            val finalDiceForNextSegment = if (allDiceNowScoredAndUnavailable) {
-                newDiceForDomain.map { it.copy(isAvailable = true) } // All dice become available again
+            val currentSelectedDiceValue = _uiState.value.selectedDiceScore
+            val currentDomainState = _domainGameState.value // Immutable snapshot
+
+            val selectedDomainDiceIds = _uiState.value.currentDice.filter { it.isSelected }.map { it.id }.toSet()
+
+            val diceKeptInDomain = currentDomainState.turnData.diceOnTable.map {
+                if (it.id in selectedDomainDiceIds) it.copy(isAvailable = false) else it
+            }
+
+            val allDiceNowKeptAndUnavailable = diceKeptInDomain.all { !it.isAvailable }
+            val accumulatedScoreAfterKeep = currentDomainState.turnData.currentTurnScore + currentSelectedDiceValue
+
+            val nextTurnData = if (allDiceNowKeptAndUnavailable) {
+                val tempStateForFullRoll = currentDomainState.copy(
+                    turnData = TurnData(
+                        diceOnTable = diceKeptInDomain, // All dice marked !isAvailable
+                        currentTurnScore = accumulatedScoreAfterKeep
+                    )
+                )
+                val stateAfterFullRoll = gameEngine.rollDice(tempStateForFullRoll)
+                stateAfterFullRoll.turnData.copy(currentTurnScore = accumulatedScoreAfterKeep)
             } else {
-                newDiceForDomain
+                currentDomainState.turnData.copy(
+                    diceOnTable = diceKeptInDomain,
+                    currentTurnScore = accumulatedScoreAfterKeep
+                )
             }
 
-            val updatedTurnData = currentDomainState.turnData.copy(
-                diceOnTable = finalDiceForNextSegment,
-                currentTurnScore = currentDomainState.turnData.currentTurnScore + currentSelectedDiceValue
-            )
+            val newDomainState = currentDomainState.copy(turnData = nextTurnData)
+            _domainGameState.value = newDomainState
 
-            _domainGameState.update { it.copy(turnData = updatedTurnData) }
+            _uiState.update {
+                val currentPlayer = newDomainState.getCurrentPlayer() // Use player from new state
+                val playerHasOpened = hasPlayerOpened(currentPlayer, gameSettings.value)
 
-            _uiState.update { currentState ->
-                val currentPlayer = currentDomainState.getCurrentPlayer() // Name won't change mid-turn
-                val playerHasOpened = hasPlayerOpened(currentPlayer)
-                val openingThreshold = gameSettings.value.openingScoreThreshold
+                val canBankAfterKeeping = newDomainState.turnData.currentTurnScore > 0 &&
+                        (playerHasOpened || newDomainState.turnData.currentTurnScore >= gameSettings.value.openingScoreThreshold)
+                
+                val canRollAfterKeeping = newDomainState.turnData.diceOnTable.any { it.isAvailable }
 
-                // Player can bank if the new accumulated turn score is > 0 and meets opening criteria.
-                val canBankAfterKeeping = updatedTurnData.currentTurnScore > 0 &&
-                        (playerHasOpened || updatedTurnData.currentTurnScore >= openingThreshold)
-
-                // Player can roll if there are available dice for the next segment.
-                val canRollAfterKeeping = finalDiceForNextSegment.any { d -> d.isAvailable }
-
-                currentState.copy(
-                    currentDice = finalDiceForNextSegment.mapIndexed { index, domainDice ->
-                        mapDomainToUiDice(domainDice, index, domainDice.isAvailable && gameEngine.calculateScore(listOf(domainDice)) > 0)
-                    }.sortedBy { d -> d.id },
-                    turnScore = updatedTurnData.currentTurnScore,
-                    selectedDiceScore = 0, // Reset after keeping
+                mapDomainToUiState(newDomainState).copy(
+                    selectedDiceScore = 0,
                     canRoll = canRollAfterKeeping,
                     canBank = canBankAfterKeeping,
-                    gameMessage = "Score kept: $currentSelectedDiceValue. Total turn score: ${updatedTurnData.currentTurnScore}. Roll again or bank.",
-                    potentialScoreAfterRoll = 0 // Reset, will be set by next roll
+                    gameMessage = "Score kept: $currentSelectedDiceValue. Total turn score: ${newDomainState.turnData.currentTurnScore}. Roll again or bank.",
+                    potentialScoreAfterRoll = 0
                 )
             }
         }
     }
 
     /**
-     * Player chooses to end their turn and bank their accumulated turn score.
-     * Uses [FinalizeTurnUseCase] to apply game rules (opening, win condition) and switch player.
-     * Can be called directly by UI or internally (e.g., after a bust).
-     * @param gameStateAtTurnEnd Optional: The specific [GameState] to finalize. If null, uses current `_domainGameState.value`.
+     * Handles the action of ending the current turn and banking the accumulated score.
+     * @param gameStateAtTurnEnd Optional [GameState] to finalize, used internally after a bust.
      */
     fun endTurnAndBankAccumulatedScore(gameStateAtTurnEnd: GameState? = null) {
-         if (_domainGameState.value.isGameOver && gameStateAtTurnEnd == null) return
+        if (_domainGameState.value.isGameOver && gameStateAtTurnEnd == null) return
 
         viewModelScope.launch {
-            val stateToFinalize = gameStateAtTurnEnd ?: _domainGameState.value
-            // Ensure the turnScore to finalize is what's in stateToFinalize.turnData.currentTurnScore
-            val newDomainState = finalizeTurnUseCase(stateToFinalize, gameSettings.value)
-            _domainGameState.value = newDomainState
-            _uiState.value = mapDomainToUiState(newDomainState) // Update UI with the state for the new turn/player or game over
+            val stateBeforeBankAttempt = gameStateAtTurnEnd ?: _domainGameState.value
+            val playerBeforeAttempt = stateBeforeBankAttempt.getCurrentPlayer()
+            val turnScoreAttempted = stateBeforeBankAttempt.turnData.currentTurnScore
+            val currentSettings = gameSettings.value // Capture current settings
+            val playerWasOpenBeforeAttempt = hasPlayerOpened(playerBeforeAttempt, currentSettings)
+
+            val newDomainStateAfterFinalize = finalizeTurnUseCase(stateBeforeBankAttempt, currentSettings)
+            _domainGameState.value = newDomainStateAfterFinalize
+
+            val playerAfterFinalize = newDomainStateAfterFinalize.getCurrentPlayer()
+            var specificMessage: String? = null
+
+            val scoreDidNotIncrease = playerBeforeAttempt.id == playerAfterFinalize.id && playerAfterFinalize.totalScore == playerBeforeAttempt.totalScore
+
+            if (!playerWasOpenBeforeAttempt && turnScoreAttempted > 0 && turnScoreAttempted < currentSettings.openingScoreThreshold) {
+                if (scoreDidNotIncrease && newDomainStateAfterFinalize.turnData.currentTurnScore == 0) {
+                    specificMessage = "You need ${currentSettings.openingScoreThreshold} points to open. Your score of $turnScoreAttempted was not banked."
+                }
+            } else if (gameStateAtTurnEnd != null && turnScoreAttempted == 0 && stateBeforeBankAttempt.turnData.diceOnTable.any{it.isAvailable}) {
+                 // This condition means it was a bust from rollDice, not just banking a zero score
+                specificMessage = "Bust! Score for this turn is lost. It's ${playerAfterFinalize.name}'s turn."
+            }
+            
+            val baseUiState = mapDomainToUiState(newDomainStateAfterFinalize)
+            _uiState.value = baseUiState.copy(
+                gameMessage = specificMessage ?: baseUiState.gameMessage
+            )
         }
     }
 
-
-    /**
-     * Maps a domain [Dice] object to a UI [DiceUi] object.
-     * @param domainDice The [Dice] from the domain layer.
-     * @param id The unique identifier for the UI representation.
-     * @param canBeHeldPrecalculated Indicates if this die can be held based on a pre-calculation.
-     * @return The corresponding [DiceUi].
-     */
-    private fun mapDomainToUiDice(domainDice: Dice, id: Int, canBeHeldPrecalculated: Boolean): DiceUi {
+    private fun mapDomainToUiDice(domainDice: Dice, canBeHeldPrecalculated: Boolean): DiceUi {
         return DiceUi(
-            id = id,
+            id = domainDice.id,
             value = domainDice.value,
-            isSelected = false, // Selection is transient for a roll segment; UI will manage actual selections
+            isSelected = false,
             canBeHeld = canBeHeldPrecalculated,
-            isScored = !domainDice.isAvailable // isScored means it has been used in current turn
+            isScored = !domainDice.isAvailable
         )
     }
 
@@ -359,17 +337,31 @@ class GameViewModel @Inject constructor(
      * @return The corresponding domain [Dice].
      */
     private fun mapUiToDomainDice(diceUi: DiceUi): Dice {
-        // For score calculation, the domain Dice is considered "available" in that context.
-        // Its actual persisted isAvailable state is managed in _domainGameState.
-        return Dice(value = diceUi.value, isAvailable = true)
+        return Dice(
+            id = diceUi.id,
+            value = diceUi.value,
+            isAvailable = true, 
+            isSelected = diceUi.isSelected
+        )
     }
 
     /**
-     * Resets the game to its initial state for a new game.
+     * Resets the game to its initial state.
      */
     fun newGame() {
-        val newInitialDomainState = createInitialDomainGameState()
-        _domainGameState.value = newInitialDomainState
-        _uiState.value = mapDomainToUiState(newInitialDomainState)
+        viewModelScope.launch {
+            try {
+                // Réinitialiser le state du jeu avec les settings actuels
+                val initialState = createInitialDomainGameState()
+                _domainGameState.value = initialState
+                _uiState.value = mapDomainToUiState(initialState)
+            } catch (e: Exception) {
+                println("⚠️ Erreur lors du newGame: ${e.message}")
+                // Fallback vers un état initial minimal
+                val fallbackState = createInitialDomainGameState()
+                _domainGameState.value = fallbackState
+                _uiState.value = mapDomainToUiState(fallbackState)
+            }
+        }
     }
 }
